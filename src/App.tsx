@@ -1,35 +1,90 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import { Building } from "./components/Building";
+import { ElevatorBank } from "./components/ElevatorBank";
+import { BuildingConfig } from "./types/types";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Default configuration for a single building
+  const [buildings] = useState<BuildingConfig[]>([
+    {
+      id: 1,
+      numFloors: 15,
+      numElevators: 3,
+    },
+  ]);
+
+  const [activeFloors, setActiveFloors] = useState<Set<number>>(new Set());
+  const [elevatorPositions, setElevatorPositions] = useState<Set<number>>(
+    new Set()
+  );
+
+  const handleFloorCall = (floorNumber: number) => {
+    // Don't add if already active or if an elevator is already there
+    if (!activeFloors.has(floorNumber) && !elevatorPositions.has(floorNumber)) {
+      setActiveFloors((prev) => new Set(prev).add(floorNumber));
+    }
+  };
+
+  const handleElevatorMove = (
+    floorNumber: number,
+    currentFloor: number | null
+  ) => {
+    setActiveFloors((prev) => {
+      const next = new Set(prev);
+      next.delete(floorNumber);
+      return next;
+    });
+
+    setElevatorPositions((prev) => {
+      const next = new Set(prev);
+      // Remove the elevator from its previous position if it had one
+      if (currentFloor !== null) {
+        next.delete(currentFloor);
+      }
+      // Add the elevator to its new position
+      next.add(floorNumber);
+      return next;
+    });
+  };
+
+  // When an elevator leaves a floor
+  const handleElevatorLeave = (floorNumber: number) => {
+    setElevatorPositions((prev) => {
+      const next = new Set(prev);
+      next.delete(floorNumber);
+      return next;
+    });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          gap: "20px",
+        }}
+      >
+        {buildings.map((buildingConfig) => (
+          <div key={buildingConfig.id} style={{ display: "flex" }}>
+            <Building
+              config={buildingConfig}
+              onFloorCall={handleFloorCall}
+              activeFloors={activeFloors}
+            />
+            <ElevatorBank
+              config={buildingConfig}
+              onElevatorMove={handleElevatorMove}
+              onElevatorLeave={handleElevatorLeave}
+              activeFloors={activeFloors}
+            />
+          </div>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

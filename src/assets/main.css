@@ -1,0 +1,9 @@
+﻿.blackline {
+height: 7px;
+background-color: #000000;
+}
+
+/* Additional elevator system styles */
+.metal.linear.active {
+  color: #00ff00 !important;
+}
